@@ -1,5 +1,5 @@
 buildscript {
-    ext.javaLanguageVersion = JavaLanguageVersion.of(JavaVersion.VERSION_11) //JavaLanguageVersion.of(JavaVersion.current().isJava11Compatible() ? JavaVersion.current().getMajorVersion() : 17)
+    ext.javaLanguageVersion = JavaVersion.VERSION_11 //JavaLanguageVersion.of(JavaVersion.current().isJava11Compatible() ? JavaVersion.current().getMajorVersion() : 17)
     ext.javaTargetVersion = JavaVersion.VERSION_11 //JavaVersion.VERSION_1_8
 
     repositories {
