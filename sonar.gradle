@@ -1,6 +1,6 @@
 
 // Configure SonarQube properties
-sonarqube {
+sonar {
     properties {
         // The name and version displayed in the SonarQube UI
         property 'sonar.projectName', 'micrometer-registry-datadog'
@@ -101,7 +101,7 @@ tasks.matching { it.name == 'build' }.all {
         }
     )
 }
-tasks.matching { it.name == 'sonarqube' }.all {
+tasks.matching { it.name == 'sonar' }.all {
     dependsOn.remove(
         tasks.matching { task ->
             task.name.toLowerCase().contains('build')
@@ -113,6 +113,10 @@ tasks.matching { it.name == 'sonarqube' }.all {
         }
     )
 }
+tasks.matching { it.name == 'sonar' }.all {
+    dependsOn.remove(tasks.named('compileJava'))
+    mustRunAfter.remove(tasks.named('compileJava'))
+}
 tasks.withType(Test) {
     onlyIf { false }
 }
@@ -120,4 +124,9 @@ tasks.matching { task ->
     task.name.toLowerCase().contains('test')
 }.configureEach {
     enabled = false
+}
+
+task sonarqube {
+    dependsOn = []
+    finalizedBy 'sonar'
 }
