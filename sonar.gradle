@@ -43,16 +43,16 @@ sonarqube {
 }
 
 // Ensure Sonar only runs after build
-afterEvaluate {
-    tasks.matching { it.name == 'sonarqube' }.configureEach { task ->
-        if (tasks.findByName('build') != null) {
-            task.dependsOn(tasks.named('build'))
-            task.mustRunAfter(tasks.named('build'))
-        } else {
-            println "The 'build' task was not found. Skipping dependency setup for 'sonarqube'."
-        }
-    }
-}
+// afterEvaluate {
+//     tasks.matching { it.name == 'sonarqube' }.configureEach { task ->
+//         if (tasks.findByName('build') != null) {
+//             task.dependsOn(tasks.named('build'))
+//             task.mustRunAfter(tasks.named('build'))
+//         } else {
+//             println "The 'build' task was not found. Skipping dependency setup for 'sonarqube'."
+//         }
+//     }
+// }
 
 // attempt no cache
 allprojects {
