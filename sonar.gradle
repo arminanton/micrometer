@@ -89,6 +89,10 @@ allprojects {
 
 // no failures
 gradle.taskGraph.whenReady { taskGraph ->
+    println "Java Version:"
+    exec {
+        commandLine 'java', '--version'
+    }
     taskGraph.allTasks.each { task ->
         if (task instanceof org.gradle.api.tasks.testing.Test) {
             // For Test tasks, use ignoreFailures
