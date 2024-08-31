@@ -1,6 +1,6 @@
 
 // Configure SonarQube properties
-sonar {
+sonarqube {
     properties {
         // The name and version displayed in the SonarQube UI
         property 'sonar.projectName', 'micrometer-registry-datadog'
