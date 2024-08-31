@@ -1,6 +1,6 @@
 
 // Configure SonarQube properties
-sonar {
+sonarqube {
     properties {
         // The name and version displayed in the SonarQube UI
         property 'sonar.projectName', 'micrometer-registry-datadog'
@@ -13,8 +13,11 @@ sonar {
         // Should be relative to this gradle file
         property 'sonar.sources', '.'
 
+        property "sonar.java.source", "1.8"
+        property "sonar.java.target", "1.8"
+
         // Path containing tests
-        property 'sonar.tests', ''
+        // property 'sonar.tests', ''
 
         // Exclude paths you don't want Sonar to examine as a Test for code coverage
         // (like third-party, configuration files)
@@ -24,12 +27,12 @@ sonar {
         property "sonar.projectExclusions", "samples/**,docs/**,**/micrometer-samples-jetty12/**"
 
         // Setup unit tests path using JUnit
-        property 'sonar.junit.reportPaths', ''
+        // property 'sonar.junit.reportPaths', ''
 
         // Build paths
-        property 'sonar.java.binaries', ''
-        property 'sonar.java.test.binaries', ''
-        property 'sonar.java.test.libraries', ''
+        // property 'sonar.java.binaries', ''
+        // property 'sonar.java.test.binaries', ''
+        // property 'sonar.java.test.libraries', ''
 
         // Encoding of the source code. Default is default system encoding
         property 'sonar.sourceEncoding', 'UTF-8'
@@ -62,71 +65,72 @@ allprojects {
 			println "Starting task ${name}"
         }
     }
+    // tasks.withType(JavaCompile).configureEach {
+    //     sourceCompatibility = '1.8'
+    //     targetCompatibility = '1.8'
+    // }
 }
-tasks.matching { it.name == 'compileJava' }.all {
-    dependsOn(tasks.named('clean'))
-    mustRunAfter(tasks.named('clean'))
-}
+// tasks.matching { it.name == 'compileJava' }.all {
+//     dependsOn(tasks.named('clean'))
+//     mustRunAfter(tasks.named('clean'))
+// }
 
 // no failures
 gradle.taskGraph.whenReady { taskGraph ->
     taskGraph.allTasks.each { task ->
-        if (task instanceof org.gradle.api.tasks.testing.Test) {
-            // For Test tasks, use ignoreFailures
-            task.ignoreFailures = true
-        } else if (task instanceof org.gradle.api.tasks.Exec || task instanceof org.gradle.api.tasks.JavaExec) {
-            // For Exec or JavaExec tasks, use ignoreExitValue
-            task.ignoreExitValue = true
-        }
-        task.doLast {
-            if (task.state.failure) {
-                println "Task ${task.name} failed, but gradle will continue."
-                task.state.failure = null
-                task.state.outcome = org.gradle.api.tasks.TaskExecutionOutcome.SUCCESS
-            }
-        }
+        // if (task instanceof org.gradle.api.tasks.testing.Test) {
+        //     // For Test tasks, use ignoreFailures
+        //     task.ignoreFailures = true
+        // } else if (task instanceof org.gradle.api.tasks.Exec || task instanceof org.gradle.api.tasks.JavaExec) {
+        //     // For Exec or JavaExec tasks, use ignoreExitValue
+        //     task.ignoreExitValue = true
+        // }
+        // task.doLast {
+        //     if (task.state.failure) {
+        //         println "Task ${task.name} failed, but gradle will continue."
+        //         task.state.failure = null
+        //         task.state.outcome = org.gradle.api.tasks.TaskExecutionOutcome.SUCCESS
+        //     }
+        // }
+        // if (task.name == 'sonarqube') {
+        //     task.configure { sonarqubeTask ->
+        //         sonarqubeTask.dependsOn.findAll { innerTask ->
+        //             !innerTask.name.contains('sonar')
+        //         }.each { taskToRemove ->
+        //             sonarqubeTask.dependsOn.remove(taskToRemove)
+        //         }
+        //     }
+        // }
     }
 }
 
 // Remove the test tasks dependencies from SonarQube run
-tasks.matching { it.name == 'build' }.all {
-    dependsOn.remove(
-        tasks.matching { task ->
-            task.name.toLowerCase().contains('test')
-        }
-    )
-    mustRunAfter.remove(
-        tasks.matching { task ->
-            task.name.toLowerCase().contains('test')
-        }
-    )
-}
-tasks.matching { it.name == 'sonar' }.all {
-    dependsOn.remove(
-        tasks.matching { task ->
-            task.name.toLowerCase().contains('build')
-        }
-    )
-    mustRunAfter.remove(
-        tasks.matching { task ->
-            task.name.toLowerCase().contains('build')
-        }
-    )
-}
-tasks.matching { it.name == 'sonar' }.all {
-    dependsOn.remove(tasks.named('compileJava'))
-    mustRunAfter.remove(tasks.named('compileJava'))
-}
-tasks.withType(Test) {
-    onlyIf { false }
-}
-tasks.matching { task ->
-    task.name.toLowerCase().contains('test')
-}.configureEach {
-    enabled = false
-}
+// tasks.matching { it.name == 'build' }.all {
+//     dependsOn.remove(
+//         tasks.matching { task ->
+//             task.name.toLowerCase().contains('test')
+//         }
+//     )
+//     mustRunAfter.remove(
+//         tasks.matching { task ->
+//             task.name.toLowerCase().contains('test')
+//         }
+//     )
+// }
+/////
+// tasks.withType(Test) {
+//     onlyIf { false }
+// }
+// tasks.matching { task ->
+//     task.name.toLowerCase().contains('test')
+// }.configureEach {
+//     enabled = false
+// }
 
-task sonarqube {
-    dependsOn = []
-    finalizedBy 'sonar'
-}
+// tasks.named('sonarqube').configure { sonarqubeTask ->
+//     sonarqubeTask.dependsOn.findAll { task ->
+//         task instanceof Task && (task.name == 'build' || task.name == 'test')
+//     }.each { taskToRemove ->
+//         sonarqubeTask.dependsOn.remove(taskToRemove)
+//     }
+// }
