@@ -65,10 +65,10 @@ allprojects {
 			println "Starting task ${name}"
         }
     }
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
-    }
+    // tasks.withType(JavaCompile).configureEach {
+    //     sourceCompatibility = '1.8'
+    //     targetCompatibility = '1.8'
+    // }
     configurations.all {
         resolutionStrategy {
             force 'com.github.ben-manes.caffeine:caffeine:2.8.8' // Force a compatible version
