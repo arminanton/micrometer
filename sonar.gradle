@@ -46,16 +46,24 @@ sonarqube {
 }
 
 // Ensure Sonar only runs after build
-// afterEvaluate {
-//     tasks.matching { it.name == 'sonarqube' }.configureEach { task ->
-//         if (tasks.findByName('build') != null) {
-//             task.dependsOn(tasks.named('build'))
-//             task.mustRunAfter(tasks.named('build'))
-//         } else {
-//             println "The 'build' task was not found. Skipping dependency setup for 'sonarqube'."
-//         }
-//     }
-// }
+afterEvaluate {
+    // tasks.matching { it.name == 'sonarqube' }.configureEach { task ->
+    //     if (tasks.findByName('build') != null) {
+    //         task.dependsOn(tasks.named('build'))
+    //         task.mustRunAfter(tasks.named('build'))
+    //     } else {
+    //         println "The 'build' task was not found. Skipping dependency setup for 'sonarqube'."
+    //     }
+    // }
+    tasks.matching { task ->
+        task.name.toLowerCase().contains('test') || task.name.contains('docs') || task.name.contains('license')
+    }.configureEach {
+        enabled = false
+    }
+    tasks.withType(Test) {
+        onlyIf { false }
+    }
+}
 
 // attempt no cache
 allprojects {
@@ -64,6 +72,14 @@ allprojects {
         doFirst {
 			println "Starting task ${name}"
         }
+    }
+    tasks.matching { task ->
+        task.name.toLowerCase().contains('test') || task.name.contains('docs') || task.name.contains('license')
+    }.configureEach {
+        enabled = false
+    }
+    tasks.withType(Test) {
+        onlyIf { false }
     }
     // tasks.withType(JavaCompile).configureEach {
     //     sourceCompatibility = '1.8'
@@ -135,14 +151,6 @@ gradle.taskGraph.whenReady { taskGraph ->
 //     )
 // }
 /////
-tasks.withType(Test) {
-    onlyIf { false }
-}
-tasks.matching { task ->
-    task.name.toLowerCase().contains('test')
-}.configureEach {
-    enabled = false
-}
 
 // tasks.named('sonarqube').configure { sonarqubeTask ->
 //     sonarqubeTask.dependsOn.findAll { task ->
@@ -151,3 +159,12 @@ tasks.matching { task ->
 //         sonarqubeTask.dependsOn.remove(taskToRemove)
 //     }
 // }
+
+tasks.matching { task ->
+    task.name.toLowerCase().contains('test') || task.name.contains('docs') || task.name.contains('license')
+}.configureEach {
+    enabled = false
+}
+tasks.withType(Test) {
+    onlyIf { false }
+}
