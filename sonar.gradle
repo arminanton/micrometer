@@ -91,6 +91,7 @@ allprojects {
 gradle.taskGraph.whenReady { taskGraph ->
     println "Java Version:"
     exec {
+        commandLine 'echo', '"william running"'
         commandLine 'java', '--version'
     }
     taskGraph.allTasks.each { task ->
