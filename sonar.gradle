@@ -13,6 +13,8 @@ sonarqube {
         // Should be relative to this gradle file
         property 'sonar.sources', '.'
 
+        property "sonar.javascript.enabled", "false"
+
         // property "sonar.java.source", "1.8"
         // property "sonar.java.target", "1.8"
 
