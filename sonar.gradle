@@ -101,6 +101,18 @@ tasks.matching { it.name == 'build' }.all {
         }
     )
 }
+tasks.matching { it.name == 'sonarqube' }.all {
+    dependsOn.remove(
+        tasks.matching { task ->
+            task.name.toLowerCase().contains('build')
+        }
+    )
+    mustRunAfter.remove(
+        tasks.matching { task ->
+            task.name.toLowerCase().contains('build')
+        }
+    )
+}
 tasks.withType(Test) {
     onlyIf { false }
 }
