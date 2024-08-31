@@ -23,7 +23,7 @@ sonar {
         // (like third-party, configuration files)
         property 'sonar.test.exclusions', '**/*'
 
-        property "sonar.exclusions", "samples/**,docs/**,**/micrometer-samples-jetty12/**"
+        property 'sonar.exclusions', '**/micrometer-samples-jetty12/**, samples/**, docs/**'
         property "sonar.projectExclusions", "samples/**,docs/**,**/micrometer-samples-jetty12/**"
 
         // Setup unit tests path using JUnit
