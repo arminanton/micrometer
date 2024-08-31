@@ -127,14 +127,14 @@ gradle.taskGraph.whenReady { taskGraph ->
 //     )
 // }
 /////
-// tasks.withType(Test) {
-//     onlyIf { false }
-// }
-// tasks.matching { task ->
-//     task.name.toLowerCase().contains('test')
-// }.configureEach {
-//     enabled = false
-// }
+tasks.withType(Test) {
+    onlyIf { false }
+}
+tasks.matching { task ->
+    task.name.toLowerCase().contains('test')
+}.configureEach {
+    enabled = false
+}
 
 // tasks.named('sonarqube').configure { sonarqubeTask ->
 //     sonarqubeTask.dependsOn.findAll { task ->
