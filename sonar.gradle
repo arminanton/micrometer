@@ -60,17 +60,15 @@ sonar {
 // attempt no cache
 allprojects {
     tasks.all {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
 		outputs.upToDateWhen { false }
         doFirst {
 			println "Starting task ${name}"
         }
     }
-    // tasks.withType(JavaCompile).configureEach {
-    //     sourceCompatibility = '1.8'
-    //     targetCompatibility = '1.8'
-    // }
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 }
 // tasks.matching { it.name == 'compileJava' }.all {
 //     dependsOn(tasks.named('clean'))
