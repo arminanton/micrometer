@@ -20,6 +20,7 @@ sonarqube {
         // (like third-party, configuration files)
         property 'sonar.test.exclusions', '**/*'
 
+        property "sonar.exclusions", "samples/**,docs/**"
         property "sonar.projectExclusions", "samples/**,docs/**"
 
         // Setup unit tests path using JUnit
