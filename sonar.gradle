@@ -134,7 +134,3 @@ gradle.taskGraph.whenReady { taskGraph ->
 //         sonarqubeTask.dependsOn.remove(taskToRemove)
 //     }
 // }
-
-tasks.register('sonarqube') {
-    dependsOn tasks.named('sonar')
-}
