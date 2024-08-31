@@ -69,10 +69,10 @@ allprojects {
     //     sourceCompatibility = '1.8'
     //     targetCompatibility = '1.8'
     // }
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
+    // tasks.withType(JavaCompile).configureEach {
+    //     sourceCompatibility = JavaVersion.VERSION_11
+    //     targetCompatibility = JavaVersion.VERSION_11
+    // }
     configurations.all {
         resolutionStrategy {
             force 'com.github.ben-manes.caffeine:caffeine:2.8.8' // Force a compatible version
