@@ -1,6 +1,6 @@
 buildscript {
-    ext.javaLanguageVersion = JavaLanguageVersion.of(JavaVersion.current().isJava11Compatible() ? JavaVersion.current().getMajorVersion() : 17)
-    ext.javaTargetVersion = JavaVersion.VERSION_1_8
+    ext.javaLanguageVersion = JavaLanguageVersion.of(JavaVersion.VERSION_11.getMajorVersion()) //JavaLanguageVersion.of(JavaVersion.current().isJava11Compatible() ? JavaVersion.current().getMajorVersion() : 17)
+    ext.javaTargetVersion = JavaVersion.VERSION_11 //JavaVersion.VERSION_1_8
 
     repositories {
         mavenCentral()
@@ -31,6 +31,13 @@ buildscript {
     configurations.classpath.resolutionStrategy.cacheDynamicVersionsFor 0, 'minutes'
 }
 
+plugins {
+    id 'java'
+    // id 'org.sonarqube' version '5.0.0.4638'
+    id "org.sonarqube" version "4.3.0.3225" // latest compatible with gradle 8.6
+    // id "org.sonarqube" version "3.4.0.2513"
+}
+
 // Hacks because of Antora's clone/checkout/worktrees behavior
 // Antora uses shallow-clone and worktrees to check out branches/tags.
 if (project.hasProperty('antora')) {
@@ -50,7 +57,7 @@ def releaseStage = findProperty('release.stage')
 apply plugin: 'com.netflix.nebula.release'
 release.defaultVersionStrategy = nebula.plugin.release.git.opinion.Strategies.SNAPSHOT
 
-apply plugin: 'io.github.gradle-nexus.publish-plugin'
+// apply plugin: 'io.github.gradle-nexus.publish-plugin'
 apply from: 'dependencies.gradle'
 
 allprojects {
@@ -61,7 +68,7 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'signing'
+    // apply plugin: 'signing'
     apply plugin: 'io.spring.javaformat'
     apply plugin: 'com.diffplug.spotless'
 
@@ -214,69 +221,130 @@ subprojects {
             }
         }
 
-        // Publish resolved versions.
-        plugins.withId('maven-publish') {
-            publishing {
-                publications {
-                    nebula(MavenPublication) {
-                        versionMapping {
-                            allVariants {
-                                fromResolutionResult()
+        
+        if (!findProperty('SNAPSHOT_REPO_USER') || !findProperty('SNAPSHOT_REPO_PASSWORD') ||
+            !findProperty('MILESTONE_REPO_USER') || !findProperty('MILESTONE_REPO_PASSWORD')) {
+            tasks.withType(PublishToMavenRepository).configureEach {
+                enabled = false
+            }
+            tasks.withType(PublishToMavenLocal).configureEach {
+                enabled = false
+            }
+        } else {
+            plugins.withId('maven-publish') {
+                publishing {
+                    publications {
+                        nebula(MavenPublication) {
+                            versionMapping {
+                                allVariants {
+                                    fromResolutionResult()
+                                }
                             }
-                        }
 
-                        // We publish resolved versions so don't need to publish our dependencyManagement
-                        // too. This is different from many Maven projects, where published artifacts often
-                        // don't include resolved versions and have a parent POM including dependencyManagement.
-                        pom.withXml {
-                            def dependencyManagement = asNode().get('dependencyManagement')
-                            if (dependencyManagement != null) {
-                                asNode().remove(dependencyManagement)
+                            // We publish resolved versions so don't need to publish our dependencyManagement
+                            pom.withXml {
+                                def dependencyManagement = asNode().get('dependencyManagement')
+                                if (dependencyManagement != null) {
+                                    asNode().remove(dependencyManagement)
+                                }
                             }
                         }
                     }
+
+                    repositories {
+                        maven {
+                            name = 'Snapshot'
+                            url = 'https://repo.spring.io/snapshot'
+                            credentials {
+                                username findProperty('SNAPSHOT_REPO_USER')
+                                password findProperty('SNAPSHOT_REPO_PASSWORD')
+                            }
+                        }
+                        maven {
+                            name = 'Milestone'
+                            url = 'https://repo.spring.io/milestone'
+                            credentials {
+                                username findProperty('MILESTONE_REPO_USER')
+                                password findProperty('MILESTONE_REPO_PASSWORD')
+                            }
+                        }
+                    }
+                }
+
+                required = System.env.CIRCLE_STAGE == 'deploy' && findProperty('SIGNING_KEY') && findProperty('SIGNING_PASSWORD')
+                if (required) {
+                    signing {
+                        useInMemoryPgpKeys(findProperty('SIGNING_KEY'), findProperty('SIGNING_PASSWORD'))
+                        sign publishing.publications.nebula
+                    }
+                } else {
+                    tasks.withType(Sign).configureEach {
+                        enabled = false
+                    }
+                }
+
+                tasks.withType(GenerateModuleMetadata) {
+                    enabled = false
                 }
             }
         }
     }
 
-    plugins.withId('maven-publish') {
-        publishing {
-            publications {
-                nebula(MavenPublication) {
-                    // Nebula converts dynamic versions to static ones so it's ok.
-                    suppressAllPomMetadataWarnings()
-                }
-            }
-            repositories {
-                maven {
-                    name = 'Snapshot'
-                    url = 'https://repo.spring.io/snapshot'
-                    credentials {
-                        username findProperty('SNAPSHOT_REPO_USER')
-                        password findProperty('SNAPSHOT_REPO_PASSWORD')
+    if (!(!findProperty('SNAPSHOT_REPO_USER') || !findProperty('SNAPSHOT_REPO_PASSWORD') ||
+        !findProperty('MILESTONE_REPO_USER') || !findProperty('MILESTONE_REPO_PASSWORD'))) {
+        plugins.withId('maven-publish') {
+            publishing {
+                publications {
+                    nebula(MavenPublication) {
+                        // Nebula converts dynamic versions to static ones so it's ok.
+                        suppressAllPomMetadataWarnings()
                     }
                 }
-                maven {
-                    name = 'Milestone'
-                    url = 'https://repo.spring.io/milestone'
-                    credentials {
-                        username findProperty('MILESTONE_REPO_USER')
-                        password findProperty('MILESTONE_REPO_PASSWORD')
+                
+                // Disable repositories if credentials are missing
+                repositories {
+                    maven {
+                        name = 'Snapshot'
+                        url = 'https://repo.spring.io/snapshot'
+                        credentials {
+                            username findProperty('SNAPSHOT_REPO_USER')
+                            password findProperty('SNAPSHOT_REPO_PASSWORD')
+                        }
+                        if (!findProperty('SNAPSHOT_REPO_USER') || !findProperty('SNAPSHOT_REPO_PASSWORD')) {
+                            enabled = false
+                        }
+                    }
+                    maven {
+                        name = 'Milestone'
+                        url = 'https://repo.spring.io/milestone'
+                        credentials {
+                            username findProperty('MILESTONE_REPO_USER')
+                            password findProperty('MILESTONE_REPO_PASSWORD')
+                        }
+                        if (!findProperty('MILESTONE_REPO_USER') || !findProperty('MILESTONE_REPO_PASSWORD')) {
+                            enabled = false
+                        }
                     }
                 }
             }
-        }
 
-        signing {
-            required = System.env.CIRCLE_STAGE == 'deploy'
-            useInMemoryPgpKeys(findProperty('SIGNING_KEY'), findProperty('SIGNING_PASSWORD'))
-            sign publishing.publications.nebula
-        }
+            // Disable signing if credentials are missing
+            required = System.env.CIRCLE_STAGE == 'deploy' && findProperty('SIGNING_KEY') && findProperty('SIGNING_PASSWORD')
+            if (required) {
+                signing {
+                    useInMemoryPgpKeys(findProperty('SIGNING_KEY'), findProperty('SIGNING_PASSWORD'))
+                    sign publishing.publications.nebula
+                }
+            } else {
+                tasks.withType(Sign).configureEach {
+                    enabled = false
+                }
+            }
 
-        // Nebula doesn't interface with Gradle's module format so just disable it for now.
-        tasks.withType(GenerateModuleMetadata) {
-            enabled = false
+            // Disable metadata generation if needed
+            tasks.withType(GenerateModuleMetadata).configureEach {
+                enabled = false
+            }
         }
     }
 
@@ -421,13 +489,16 @@ subprojects {
     if (check) project.rootProject.tasks.releaseCheck.dependsOn check
 }
 
-nexusPublishing {
-    repositories {
-        mavenCentral {
-            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
-            snapshotRepositoryUrl.set(uri('https://repo.spring.io/snapshot/')) // not used but necessary for the plugin
-            username = findProperty('MAVEN_CENTRAL_USER')
-            password = findProperty('MAVEN_CENTRAL_PASSWORD')
+if (!(!findProperty('MAVEN_CENTRAL_USER') || !findProperty('MAVEN_CENTRAL_PASSWORD'))) {
+    nexusPublishing {
+        repositories {
+            mavenCentral {
+                nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
+                snapshotRepositoryUrl.set(uri('https://repo.spring.io/snapshot/')) // not used but necessary for the plugin
+                if (!findProperty('MAVEN_CENTRAL_USER') || !findProperty('MAVEN_CENTRAL_PASSWORD')) {
+                    enabled = false
+                }
+            }
         }
     }
 }
@@ -437,3 +508,5 @@ wrapper {
 }
 
 defaultTasks 'build'
+
+apply from: 'sonar.gradle'
